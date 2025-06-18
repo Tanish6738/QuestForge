@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import QuestCard from '../../../components/QuestCard';
+import { ShieldQuestion, PlusCircle, ArrowLeft, Star, CheckCircle, XCircle, Clock, Calendar } from 'lucide-react';
 
 export default function QuestsPage() {
   const [quests, setQuests] = useState([]);
@@ -22,6 +23,7 @@ export default function QuestsPage() {
   }, [router]);
 
   const fetchQuests = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
       const response = await fetch('/api/quests', {
@@ -33,6 +35,8 @@ export default function QuestsPage() {
       const data = await response.json();
       if (response.ok) {
         setQuests(data.quests || []);
+      } else {
+        console.error('Failed to fetch quests:', data.error);
       }
     } catch (error) {
       console.error('Error fetching quests:', error);
@@ -47,8 +51,7 @@ export default function QuestsPage() {
       const response = await fetch(`/api/quests/${questId}`, {
         method: 'PUT',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`,'Content-Type': 'application/json'
         },
         body: JSON.stringify({ action })
       });
@@ -60,14 +63,13 @@ export default function QuestsPage() {
         return;
       }
 
-      // Show success message for XP changes
       if (data.xpGained) {
+        // Replace with a more modern notification system if available
         alert(`🎉 Quest completed! +${data.xpGained} XP earned!`);
       } else if (data.xpLost) {
         alert(`😔 Quest failed. -${data.xpLost} XP lost.`);
       }
 
-      // Refresh quests
       fetchQuests();
 
     } catch (error) {
@@ -82,8 +84,7 @@ export default function QuestsPage() {
       const response = await fetch('/api/quests', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${token}`,'Content-Type': 'application/json'
         },
         body: JSON.stringify({ action: 'generateDaily' })
       });
@@ -117,14 +118,14 @@ export default function QuestsPage() {
           return b.xpReward - a.xpReward;
         case 'difficulty':
           const difficultyOrder = { easy: 1, medium: 2, hard: 3, expert: 4 };
-          return difficultyOrder[b.difficulty] - difficultyOrder[a.difficulty];
+          return (difficultyOrder[b.difficulty] || 0) - (difficultyOrder[a.difficulty] || 0);
         case 'deadline':
           if (!a.deadline && !b.deadline) return 0;
           if (!a.deadline) return 1;
           if (!b.deadline) return -1;
           return new Date(a.deadline) - new Date(b.deadline);
         case 'duration':
-          return a.duration - b.duration;
+          return (a.duration || 0) - (b.duration || 0);
         default: // createdAt
           return new Date(b.createdAt) - new Date(a.createdAt);
       }
@@ -132,117 +133,94 @@ export default function QuestsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Loading your quests...</p>
+      <div className="min-h-screen bg-theme-background flex items-center justify-center">
+        <div className="text-center text-theme-text-secondary">
+          <div className="animate-spin h-10 w-10 border-4 border-theme-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-lg">Loading your quests...</p>
         </div>
       </div>
     );
   }
 
+  const StatCard = ({ title, value, colorClass }) => (
+    <div className="card-theme p-4 text-center flex flex-col justify-between shadow-md">
+      <p className="text-sm text-theme-text-secondary mb-1">{title}</p>
+      <p className={`text-3xl font-bold ${colorClass}`}>{value}</p>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'var(--color-bg)' }}>
+    <div className="min-h-screen bg-theme-background text-theme-text">
       {/* Header */}
-      <header className="bg-white shadow-sm border-b" style={{ borderColor: 'var(--color-border)' }}>
+      <header className="bg-theme-secondary text-theme-text shadow-sm sticky top-0 z-10 border-b border-theme-border-opaque">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
-              <button 
-                onClick={() => router.push('/dashboard')}
-                className="text-2xl hover:opacity-80"
+              <button
+                onClick={() => router.back()}
+                className="p-2 rounded-full hover:bg-theme-secondary-lighter transition-colors"
+                aria-label="Go back"
               >
-                ← 
+                <ArrowLeft />
               </button>
-              <h1 className="text-2xl font-bold text-gradient">Quest Management ⚔️</h1>
+              <h1 className="text-2xl font-bold text-theme-text flex items-center gap-2">
+                <ShieldQuestion className="h-6 w-6" />
+                Quest Log
+              </h1>
             </div>
-            
-            <div className="flex gap-2">
-              <button 
+
+            <div className="flex items-center gap-2">
+              <button
                 onClick={generateDailyQuests}
-                className="btn btn-success"
+                className="btn-outline-primary hidden sm:flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold"
               >
-                🎯 Generate Daily Quests
+                <PlusCircle className="h-4 w-4" />
+                Generate Daily
               </button>
-              <button 
+              <button
                 onClick={() => router.push('/goals')}
-                className="btn btn-primary"
+                className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold"
               >
-                📋 Manage Goals
+                Manage Goals
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <div className="card text-center">
-            <div className="text-2xl font-bold" style={{ color: 'var(--color-quest-available)' }}>
-              {quests.filter(q => q.status === 'available').length}
-            </div>
-            <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              Available
-            </div>
-          </div>
-          <div className="card text-center">
-            <div className="text-2xl font-bold" style={{ color: 'var(--color-quest-active)' }}>
-              {quests.filter(q => q.status === 'active').length}
-            </div>
-            <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              Active
-            </div>
-          </div>
-          <div className="card text-center">
-            <div className="text-2xl font-bold" style={{ color: 'var(--color-success)' }}>
-              {quests.filter(q => q.status === 'completed').length}
-            </div>
-            <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              Completed
-            </div>
-          </div>
-          <div className="card text-center">
-            <div className="text-2xl font-bold" style={{ color: 'var(--color-danger)' }}>
-              {quests.filter(q => q.status === 'failed').length}
-            </div>
-            <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              Failed
-            </div>
-          </div>
-          <div className="card text-center">
-            <div className="text-2xl font-bold" style={{ color: 'var(--color-quest-side)' }}>
-              {quests.filter(q => q.type === 'side' && q.status !== 'rejected').length}
-            </div>
-            <div className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              Side Quests
-            </div>
-          </div>
+          <StatCard title="Available" value={quests.filter(q => q.status === 'available').length} colorClass="text-theme-primary" />
+          <StatCard title="Active" value={quests.filter(q => q.status === 'active').length} colorClass="text-theme-warning" />
+          <StatCard title="Completed" value={quests.filter(q => q.status === 'completed').length} colorClass="text-theme-success" />
+          <StatCard title="Failed" value={quests.filter(q => q.status === 'failed').length} colorClass="text-theme-error" />
+          <StatCard title="Side Quests" value={quests.filter(q => q.type === 'side' && q.status !== 'rejected').length} colorClass="text-theme-accent" />
         </div>
 
         {/* Filters and Sorting */}
-        <div className="mb-6 space-y-4">
+        <div className="card-theme p-4 mb-8 space-y-6 shadow-md">
           {/* Filters */}
           <div>
-            <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
-              Filter by:
-            </h3>
+            <h3 className="text-sm font-semibold text-theme-text-secondary mb-3">FILTER BY</h3>
             <div className="flex flex-wrap gap-2">
               {['all', 'available', 'active', 'completed', 'failed', 'main', 'sub', 'side'].map(filterType => (
                 <button
                   key={filterType}
                   onClick={() => setFilter(filterType)}
-                  className={`btn ${filter === filterType ? 'btn-primary' : 'btn-secondary'}`}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${filter === filterType ? 'btn-primary' : 'btn-outline-primary'}`}
                 >
                   {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
-                  <span className="ml-1">
-                    ({quests.filter(q => {
-                      if (filterType === 'all') return true;
-                      if (filterType === 'main') return q.type === 'main';
-                      if (filterType === 'sub') return q.type === 'sub';
-                      if (filterType === 'side') return q.type === 'side' && q.status !== 'rejected';
-                      return q.status === filterType;
-                    }).length})
+                  <span className="ml-1.5 text-xs opacity-75">
+                    (
+                      {quests.filter(q => {
+                        if (filterType === 'all') return true;
+                        if (filterType === 'main') return q.type === 'main';
+                        if (filterType === 'sub') return q.type === 'sub';
+                        if (filterType === 'side') return q.type === 'side' && q.status !== 'rejected';
+                        return q.status === filterType;
+                      }).length}
+                    )
                   </span>
                 </button>
               ))}
@@ -251,23 +229,22 @@ export default function QuestsPage() {
 
           {/* Sorting */}
           <div>
-            <h3 className="text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
-              Sort by:
-            </h3>
+            <h3 className="text-sm font-semibold text-theme-text-secondary mb-3">SORT BY</h3>
             <div className="flex flex-wrap gap-2">
               {[
-                { value: 'createdAt', label: 'Created Date' },
-                { value: 'xpReward', label: 'XP Reward' },
-                { value: 'difficulty', label: 'Difficulty' },
-                { value: 'deadline', label: 'Deadline' },
-                { value: 'duration', label: 'Duration' }
-              ].map(sort => (
+                { value: 'createdAt', label: 'Recent', Icon: Calendar },
+                { value: 'xpReward', label: 'XP Reward', Icon: Star },
+                { value: 'difficulty', label: 'Difficulty', Icon: ShieldQuestion },
+                { value: 'deadline', label: 'Deadline', Icon: Clock },
+                { value: 'duration', label: 'Duration', Icon: Clock }
+              ].map(({ value, label, Icon }) => (
                 <button
-                  key={sort.value}
-                  onClick={() => setSortBy(sort.value)}
-                  className={`btn ${sortBy === sort.value ? 'btn-primary' : 'btn-secondary'}`}
+                  key={value}
+                  onClick={() => setSortBy(value)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${sortBy === value ? 'btn-primary' : 'btn-outline-primary'}`}
                 >
-                  {sort.label}
+                  <Icon className="h-4 w-4" />
+                  <span>{label}</span>
                 </button>
               ))}
             </div>
@@ -275,52 +252,54 @@ export default function QuestsPage() {
         </div>
 
         {/* Quests List */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-            Your Quests ({filteredAndSortedQuests.length})
+        <div>
+          <h2 className="text-xl font-bold text-theme-text mb-4">
+            {filter.charAt(0).toUpperCase() + filter.slice(1)} Quests ({filteredAndSortedQuests.length})
           </h2>
           
           <AnimatePresence>
             {filteredAndSortedQuests.length > 0 ? (
-              filteredAndSortedQuests.map(quest => (
-                <QuestCard
-                  key={quest._id}
-                  quest={quest}
-                  onStart={(id) => handleQuestAction(id, 'start')}
-                  onComplete={(id) => handleQuestAction(id, 'complete')}
-                  onFail={(id) => handleQuestAction(id, 'fail')}
-                  onAccept={(id) => handleQuestAction(id, 'accept')}
-                  onReject={(id) => handleQuestAction(id, 'reject')}
-                  onRetry={(id) => handleQuestAction(id, 'retry')}
-                />
-              ))
+              <div className="space-y-4">
+                {filteredAndSortedQuests.map(quest => (
+                  <QuestCard
+                    key={quest._id}
+                    quest={quest}
+                    onStart={(id) => handleQuestAction(id, 'start')}
+                    onComplete={(id) => handleQuestAction(id, 'complete')}
+                    onFail={(id) => handleQuestAction(id, 'fail')}
+                    onAccept={(id) => handleQuestAction(id, 'accept')}
+                    onReject={(id) => handleQuestAction(id, 'reject')}
+                    onRetry={(id) => handleQuestAction(id, 'retry')}
+                  />
+                ))}
+              </div>
             ) : (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-center py-12"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="text-center py-16 card-theme shadow-inner"
               >
-                <div className="text-6xl mb-4">⚔️</div>
-                <h3 className="text-xl font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
-                  No quests found
+                <ShieldQuestion className="mx-auto h-16 w-16 text-theme-text-secondary mb-4" />
+                <h3 className="text-xl font-semibold text-theme-text mb-2">
+                  No Quests Found
                 </h3>
-                <p style={{ color: 'var(--color-text-secondary)' }}>
-                  {filter === 'all' 
-                    ? "Create goals or generate daily quests to get started!"
-                    : `No ${filter} quests found.`
-                  }
+                <p className="text-theme-text-secondary max-w-md mx-auto">
+                  {filter === 'all'
+                    ? "Your quest log is empty. Try generating some daily quests or create goals to populate your adventure!"
+                    : `There are no quests matching the '${filter}' filter. Try a different one!`}
                 </p>
                 {filter === 'all' && (
-                  <div className="flex gap-4 justify-center mt-4">
-                    <button 
+                  <div className="flex gap-4 justify-center mt-6">
+                    <button
                       onClick={() => router.push('/goals')}
-                      className="btn btn-primary"
+                      className="btn-primary rounded-lg px-4 py-2 text-sm font-semibold"
                     >
-                      Create Your First Goal
+                      Create a Goal
                     </button>
-                    <button 
+                    <button
                       onClick={generateDailyQuests}
-                      className="btn btn-success"
+                      className="btn-outline-primary rounded-lg px-4 py-2 text-sm font-semibold"
                     >
                       Generate Daily Quests
                     </button>
@@ -330,7 +309,7 @@ export default function QuestsPage() {
             )}
           </AnimatePresence>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import QuestCard from "../../../../components/QuestCard";
 import QuestPlanManager from "../../../../components/QuestPlanManager";
+import { StatsCard } from "../../../../components/XPComponents";
 
 export default function GoalDetailPage() {
   const [goal, setGoal] = useState(null);
@@ -132,10 +133,10 @@ export default function GoalDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Loading goal details...</p>
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-text-secondary">Loading goal details...</p>
         </div>
       </div>
     );
@@ -144,45 +145,42 @@ export default function GoalDetailPage() {
   const filteredQuests = getFilteredQuests();
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ backgroundColor: "var(--color-bg)" }}
-    >
+    <div className="min-h-screen bg-background text-text-primary">
       {/* Header */}
-      <header
-        className="bg-white shadow-sm border-b"
-        style={{ borderColor: "var(--color-border)" }}
-      >
+      <header className="bg-surface shadow-sm border-b border-border sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push("/goals")}
-                className="text-2xl hover:opacity-80"
+                className="btn btn-ghost btn-sm p-2"
               >
-                ←
+                <span className="text-2xl">←</span>
               </button>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <span className="text-2xl">
                   {getCategoryIcon(goal?.category)}
                 </span>
-                <h1 className="text-2xl font-bold text-gradient">
+                <h1 className="text-xl md:text-2xl font-bold text-text-primary">
                   {goal?.title}
                 </h1>
               </div>
             </div>
 
-            <div
-              className="text-xs px-3 py-1 rounded-full text-white font-medium"
-              style={{ backgroundColor: getStatusColor(goal?.status) }}
+            <span
+              className={`badge ${
+                goal?.status === "completed"
+                  ? "badge-success"
+                  : "badge-primary"
+              }`}
             >
-              {goal?.status?.toUpperCase()}
-            </div>
+              {goal?.status}
+            </span>
           </div>
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Goal Info */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -191,26 +189,20 @@ export default function GoalDetailPage() {
         >
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <h2
-                className="text-xl font-semibold mb-3"
-                style={{ color: "var(--color-text-primary)" }}
-              >
+              <h2 className="text-xl font-bold mb-3 text-text-primary">
                 Description
               </h2>
-              <p style={{ color: "var(--color-text-secondary)" }}>
+              <p className="text-text-secondary prose prose-sm max-w-none">
                 {goal?.description}
               </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 text-sm">
               <div>
-                <h3
-                  className="font-medium mb-1"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
+                <h3 className="font-semibold mb-1 text-text-primary">
                   Deadline
                 </h3>
-                <p style={{ color: "var(--color-text-secondary)" }}>
+                <p className="text-text-secondary">
                   {new Date(goal?.deadline).toLocaleDateString("en-US", {
                     weekday: "long",
                     year: "numeric",
@@ -221,49 +213,31 @@ export default function GoalDetailPage() {
               </div>
 
               <div>
-                <h3
-                  className="font-medium mb-1"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
+                <h3 className="font-semibold mb-1 text-text-primary">
                   Priority
                 </h3>
-                <p style={{ color: "var(--color-text-secondary)" }}>
-                  {goal?.priority?.charAt(0).toUpperCase() +
-                    goal?.priority?.slice(1)}
+                <p className="text-text-secondary capitalize">
+                  {goal?.priority}
                 </p>
               </div>
 
               <div>
-                <h3
-                  className="font-medium mb-1"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
+                <h3 className="font-semibold mb-1 text-text-primary">
                   Category
                 </h3>
-                <p style={{ color: "var(--color-text-secondary)" }}>
-                  {goal?.category?.charAt(0).toUpperCase() +
-                    goal?.category?.slice(1)}
+                <p className="text-text-secondary capitalize">
+                  {goal?.category}
                 </p>
               </div>
 
               {goal?.tags && goal.tags.length > 0 && (
                 <div>
-                  <h3
-                    className="font-medium mb-2"
-                    style={{ color: "var(--color-text-primary)" }}
-                  >
+                  <h3 className="font-semibold mb-2 text-text-primary">
                     Tags
                   </h3>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2">
                     {goal.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="text-xs px-2 py-1 rounded-full"
-                        style={{
-                          backgroundColor: "var(--color-bg-tertiary)",
-                          color: "var(--color-text-secondary)",
-                        }}
-                      >
+                      <span key={index} className="badge badge-neutral">
                         {tag}
                       </span>
                     ))}
@@ -273,126 +247,49 @@ export default function GoalDetailPage() {
             </div>
           </div>
         </motion.div>
+
         {/* Quest Statistics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="card text-center">
-            <div
-              className="text-2xl font-bold"
-              style={{ color: "var(--color-primary)" }}
-            >
-              {quests.main.length}
-            </div>
-            <div
-              className="text-sm"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              Main Quests
-            </div>
-          </div>
-          <div className="card text-center">
-            <div
-              className="text-2xl font-bold"
-              style={{ color: "var(--color-accent)" }}
-            >
-              {quests.sub.length}
-            </div>
-            <div
-              className="text-sm"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              Sub Quests
-            </div>
-          </div>
-          <div className="card text-center">
-            <div
-              className="text-2xl font-bold"
-              style={{ color: "var(--color-success)" }}
-            >
-              {quests.all.filter((q) => q.status === "completed").length}
-            </div>
-            <div
-              className="text-sm"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              Completed
-            </div>
-          </div>
-          <div className="card text-center">
-            <div
-              className="text-2xl font-bold"
-              style={{ color: "var(--color-quest-active)" }}
-            >
-              {quests.all.filter((q) => q.status === "active").length}
-            </div>
-            <div
-              className="text-sm"
-              style={{ color: "var(--color-text-muted)" }}
-            >
-              Active
-            </div>
-          </div>
-        </div>{" "}
-        {/* Enhanced Goal Information */}
-        {goal?.dailyTimeAvailable && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="card mb-8"
-          >
-            <h2
-              className="text-xl font-semibold mb-4"
-              style={{ color: "var(--color-text-primary)" }}
-            >
-              Quest Plan Settings
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <span className="font-medium">Daily Time Available:</span>
-                <p className="text-muted">
-                  {goal.dailyTimeAvailable} minutes/day
-                </p>
-              </div>
-              <div>
-                <span className="font-medium">Difficulty Preference:</span>
-                <p className="text-muted capitalize">
-                  {goal.questGenerationPreferences?.difficulty || "Mixed"}
-                </p>
-              </div>
-              <div>
-                <span className="font-medium">Session Length:</span>
-                <p className="text-muted capitalize">
-                  {goal.questGenerationPreferences?.sessionLength || "Flexible"}
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        )}
-        {/* Tab Navigation */}
-        <div
-          className="flex flex-wrap gap-2 mb-6 border-b"
-          style={{ borderColor: "var(--color-border)" }}
-        >
-          <button
-            onClick={() => setActiveTab("plan")}
-            className={`px-4 py-2 font-medium transition-colors ${
-              activeTab === "plan"
-                ? "border-b-2 border-primary text-primary"
-                : "text-muted hover:text-primary"
-            }`}
-          >
-            📅 Quest Plan
-          </button>
-          <button
-            onClick={() => setActiveTab("legacy-quests")}
-            className={`px-4 py-2 font-medium transition-colors ${
-              activeTab === "legacy-quests"
-                ? "border-b-2 border-primary text-primary"
-                : "text-muted hover:text-primary"
-            }`}
-          >
-            🗂️ Legacy Quests
-          </button>
+          <StatsCard
+            title="Main Quests"
+            value={quests.main.length}
+            icon="🎯"
+          />
+          <StatsCard title="Sub Quests" value={quests.sub.length} icon="⦿" />
+          <StatsCard
+            title="Completed"
+            value={quests.all.filter((q) => q.status === "completed").length}
+            icon="✅"
+          />
+          <StatsCard
+            title="Active"
+            value={quests.all.filter((q) => q.status === "active").length}
+            icon="⚔️"
+          />
         </div>
+
+        {/* Tab Navigation */}
+        <div className="border-b border-border mb-6">
+          <div className="flex flex-wrap gap-2 -mb-px">
+            <button
+              onClick={() => setActiveTab("plan")}
+              className={`tab-button ${
+                activeTab === "plan" ? "tab-button-active" : ""
+              }`}
+            >
+              📅 Quest Plan
+            </button>
+            <button
+              onClick={() => setActiveTab("legacy-quests")}
+              className={`tab-button ${
+                activeTab === "legacy-quests" ? "tab-button-active" : ""
+              }`}
+            >
+              🗂️ All Generated Quests
+            </button>
+          </div>
+        </div>
+
         {/* Tab Content */}
         <AnimatePresence mode="wait">
           {activeTab === "plan" && user && (
@@ -403,7 +300,7 @@ export default function GoalDetailPage() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <QuestPlanManager goalId={params.id} userId={user.id} />
+              <QuestPlanManager goalId={params.id} userId={user.id} goal={goal} />
             </motion.div>
           )}
 
@@ -417,35 +314,22 @@ export default function GoalDetailPage() {
             >
               {/* Quest Filters */}
               <div className="flex flex-wrap gap-2 mb-6">
-                {[
-                  "all",
-                  "main",
-                  "sub",
-                  "side",
-                  "available",
-                  "active",
-                  "completed",
-                  "failed",
-                ].map((filterType) => (
-                  <button
-                    key={filterType}
-                    onClick={() => setFilter(filterType)}
-                    className={`btn ${filter === filterType ? "btn-primary" : "btn-secondary"}`}
-                  >
-                    {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
-                    <span className="ml-1">({getFilteredQuests().length})</span>
-                  </button>
-                ))}
+                {["all", "main", "sub", "side", "available", "active", "completed", "failed"].map(
+                  (filterType) => (
+                    <button
+                      key={filterType}
+                      onClick={() => setFilter(filterType)}
+                      className={`btn btn-sm ${
+                        filter === filterType ? "btn-primary" : "btn-secondary"
+                      }`}
+                    >
+                      {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
+                    </button>
+                  )
+                )}
               </div>
               {/* Legacy Quests List */}
-              <div className="space-y-4">
-                <h2
-                  className="text-xl font-semibold"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
-                  Legacy Quests {filter !== "all" && `(${filter})`}
-                </h2>
-
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <AnimatePresence>
                   {filteredQuests.length > 0 ? (
                     filteredQuests.map((quest) => (
@@ -464,16 +348,13 @@ export default function GoalDetailPage() {
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      className="text-center py-12"
+                      className="text-center py-12 card md:col-span-2 lg:col-span-3"
                     >
                       <div className="text-6xl mb-4">🎯</div>
-                      <h3
-                        className="text-xl font-medium mb-2"
-                        style={{ color: "var(--color-text-primary)" }}
-                      >
-                        No legacy quests found
+                      <h3 className="text-xl font-bold mb-2 text-text-primary">
+                        No quests found
                       </h3>
-                      <p style={{ color: "var(--color-text-secondary)" }}>
+                      <p className="text-text-secondary">
                         {filter === "all"
                           ? "Use the Quest Plan tab to generate AI-powered daily quests for this goal."
                           : `No ${filter} quests at the moment.`}
@@ -481,11 +362,11 @@ export default function GoalDetailPage() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>{" "}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </main>
     </div>
   );
 }

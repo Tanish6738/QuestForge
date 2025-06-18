@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import Landing from '../../components/Landing';
 
 export default function HomePage() {
   const [isLogin, setIsLogin] = useState(true);
+  const [showAuthForm, setShowAuthForm] = useState(false);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -26,6 +28,14 @@ export default function HomePage() {
       router.push('/dashboard');
     }
   }, [router]);
+
+  const handleLoginClick = () => {
+    setShowAuthForm(true);
+  };
+
+  const handleBackToLanding = () => {
+    setShowAuthForm(false);
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -94,21 +104,27 @@ export default function HomePage() {
     );
   }
 
+  if (!showAuthForm) {
+    return <Landing onLoginClick={handleLoginClick} />;
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-theme-background">
       <div className="w-full max-w-md">
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-8 flex items-center justify-center"
         >
-          <h1 className="text-4xl font-bold text-gradient mb-2">
+          <button onClick={handleBackToLanding} className="mr-4 text-theme-text-secondary hover:text-theme-primary transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h1 className="text-4xl font-bold" style={{ background: 'linear-gradient(to right, var(--color-primary), var(--color-accent))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             QuestForge ⚔️
           </h1>
-          <p style={{ color: 'var(--color-text-secondary)' }}>
-            Transform your goals into epic quests
-          </p>
         </motion.div>
 
         {/* Auth Form */}
@@ -116,28 +132,20 @@ export default function HomePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="card"
+          className="card-theme p-8 shadow-lg"
         >
           <div className="flex mb-6">
             <button
               type="button"
               onClick={() => setIsLogin(true)}
-              className={`flex-1 py-2 px-4 text-center font-medium transition-colors ${
-                isLogin 
-                  ? 'border-b-2 border-blue-500 text-blue-600' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`flex-1 py-2 px-4 text-center font-medium transition-colors ${isLogin ? 'border-b-2 border-theme-primary text-theme-primary' : 'text-theme-text-secondary hover:text-theme-text'}`}
             >
               Login
             </button>
             <button
               type="button"
               onClick={() => setIsLogin(false)}
-              className={`flex-1 py-2 px-4 text-center font-medium transition-colors ${
-                !isLogin 
-                  ? 'border-b-2 border-blue-500 text-blue-600' 
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`flex-1 py-2 px-4 text-center font-medium transition-colors ${!isLogin ? 'border-b-2 border-theme-primary text-theme-primary' : 'text-theme-text-secondary hover:text-theme-text'}`}
             >
               Register
             </button>
@@ -146,7 +154,7 @@ export default function HomePage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div>
-                <label className="block text-sm font-medium mb-1">
+                <label className="block text-sm font-medium mb-1 text-theme-text-secondary">
                   Username
                 </label>
                 <input
@@ -154,7 +162,7 @@ export default function HomePage() {
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
-                  className="input"
+                  className="input-theme w-full"
                   placeholder="Choose a username"
                   required={!isLogin}
                 />
@@ -162,7 +170,7 @@ export default function HomePage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-theme-text-secondary">
                 Email
               </label>
               <input
@@ -170,14 +178,14 @@ export default function HomePage() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="input"
+                className="input-theme w-full"
                 placeholder="Enter your email"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1">
+              <label className="block text-sm font-medium mb-1 text-theme-text-secondary">
                 Password
               </label>
               <input
@@ -185,7 +193,7 @@ export default function HomePage() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                className="input"
+                className="input-theme w-full"
                 placeholder="Enter your password"
                 required
                 minLength="6"
@@ -196,11 +204,7 @@ export default function HomePage() {
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="p-3 rounded-md"
-                style={{ 
-                  backgroundColor: 'var(--color-danger)',
-                  color: 'white' 
-                }}
+                className="p-3 rounded-md bg-theme-error text-white"
               >
                 {error}
               </motion.div>
@@ -209,7 +213,7 @@ export default function HomePage() {
             <button
               type="submit"
               disabled={loading}
-              className="btn btn-primary w-full"
+              className="btn btn-primary w-full py-3 rounded-lg"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -223,53 +227,16 @@ export default function HomePage() {
           </form>
 
           <div className="mt-6 text-center">
-            <p style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-theme-text-muted">
               {isLogin ? "Don't have an account? " : "Already have an account? "}
               <button
                 type="button"
                 onClick={toggleMode}
-                className="font-medium text-blue-600 hover:text-blue-500"
+                className="font-medium text-theme-primary hover:brightness-110 transition"
               >
                 {isLogin ? 'Create one' : 'Login here'}
               </button>
             </p>
-          </div>
-        </motion.div>
-
-        {/* Features Preview */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mt-8 grid grid-cols-2 gap-4 text-center"
-        >
-          <div className="p-4">
-            <div className="text-2xl mb-2">🎯</div>
-            <div className="text-sm font-medium">Quest System</div>
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Turn goals into quests
-            </div>
-          </div>
-          <div className="p-4">
-            <div className="text-2xl mb-2">⭐</div>
-            <div className="text-sm font-medium">XP & Levels</div>
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Level up your life
-            </div>
-          </div>
-          <div className="p-4">
-            <div className="text-2xl mb-2">⏰</div>
-            <div className="text-sm font-medium">Time Limits</div>
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Beat the clock
-            </div>
-          </div>
-          <div className="p-4">
-            <div className="text-2xl mb-2">🏆</div>
-            <div className="text-sm font-medium">Achievements</div>
-            <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              Unlock rewards
-            </div>
           </div>
         </motion.div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
 export default function TodaysQuests({ userId }) {
   const [questData, setQuestData] = useState(null);
@@ -123,70 +124,68 @@ export default function TodaysQuests({ userId }) {
 
   if (loading) {
     return (
-      <div className="card">
-        <div className="flex items-center justify-center h-48">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+      <div className="card-theme text-center p-8">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme-primary mx-auto"></div>
+        <p className="mt-4 text-theme-text-secondary">Loading Today&apos;s Quests...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="card">
-        <div className="text-center py-8">
-          <p className="text-red-500 mb-4">Error: {error}</p>
-          <button onClick={fetchTodaysQuests} className="btn btn-primary">
-            Try Again
-          </button>
-        </div>
+      <div className="card-theme text-center p-8">
+        <div className="text-5xl mb-4">😢</div>
+        <h3 className="text-xl font-bold text-theme-error mb-2">An Error Occurred</h3>
+        <p className="text-theme-error mb-6">{error}</p>
+        <button onClick={fetchTodaysQuests} className="btn-primary">
+          Try Again
+        </button>
       </div>
     );
   }
+
   if (!questData || questData.totalQuests === 0) {
     return (
-      <div className="card">
-        <div className="text-center py-8">
-          <div className="text-6xl mb-4">🎯</div>
-          <h3 className="text-xl font-bold mb-4">No Quests for Today</h3>
-          <p className="text-muted mb-6 max-w-md mx-auto">
-            You don&apos;t have any quests scheduled for today. Here&apos;s how to get started with your quest journey:
-          </p>
-          
-          <div className="space-y-3 max-w-md mx-auto text-left mb-6">
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-background-elevated">
-              <span className="text-2xl">📋</span>
-              <div>
-                <h4 className="font-semibold mb-1">1. Create a Goal</h4>
-                <p className="text-sm text-muted">Define what you want to achieve</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-background-elevated">
-              <span className="text-2xl">🗺️</span>
-              <div>
-                <h4 className="font-semibold mb-1">2. Generate Quest Plan</h4>
-                <p className="text-sm text-muted">Let AI create daily quests for your goal</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3 p-3 rounded-lg bg-background-elevated">
-              <span className="text-2xl">⚡</span>
-              <div>
-                <h4 className="font-semibold mb-1">3. Complete Quests</h4>
-                <p className="text-sm text-muted">Earn XP and level up as you progress</p>
-              </div>
+      <div className="card-theme text-center p-8">
+        <div className="text-6xl mb-4">🎯</div>
+        <h3 className="text-2xl font-bold text-theme-text mb-4">No Quests for Today</h3>
+        <p className="text-theme-text-secondary mb-6 max-w-md mx-auto">
+          You don&apos;t have any quests scheduled for today. Here&apos;s how to get started:
+        </p>
+        
+        <div className="space-y-4 max-w-md mx-auto text-left mb-8">
+          <div className="flex items-start gap-4 p-4 rounded-lg bg-theme-secondary">
+            <span className="text-3xl">📋</span>
+            <div>
+              <h4 className="font-semibold text-theme-text mb-1">1. Create a Goal</h4>
+              <p className="text-sm text-theme-text-secondary">Define what you want to achieve.</p>
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <a href="/goals" className="btn btn-primary">
-              📋 Create Your First Goal
-            </a>
-            <button onClick={fetchTodaysQuests} className="btn btn-secondary">
-              🔄 Refresh
-            </button>
+          <div className="flex items-start gap-4 p-4 rounded-lg bg-theme-secondary">
+            <span className="text-3xl">🗺️</span>
+            <div>
+              <h4 className="font-semibold text-theme-text mb-1">2. Generate Quest Plan</h4>
+              <p className="text-sm text-theme-text-secondary">Let AI create daily quests for your goal.</p>
+            </div>
           </div>
+          
+          <div className="flex items-start gap-4 p-4 rounded-lg bg-theme-secondary">
+            <span className="text-3xl">⚡</span>
+            <div>
+              <h4 className="font-semibold text-theme-text mb-1">3. Complete Quests</h4>
+              <p className="text-sm text-theme-text-secondary">Earn XP and level up as you progress.</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link href="/goals" className="btn-primary">
+            📋 Create Your First Goal
+          </Link>
+          <button onClick={fetchTodaysQuests} className="btn-outline-primary">
+            🔄 Refresh
+          </button>
         </div>
       </div>
     );
@@ -195,15 +194,14 @@ export default function TodaysQuests({ userId }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          {" "}
-          <h2 className="text-2xl font-bold text-gradient">
+      <div className="card-theme p-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4">
+          <h2 className="text-3xl font-bold text-theme-text">
             Today&apos;s Quests
           </h2>
-          <div className="text-right">
-            <p className="text-sm text-muted">{questData.date}</p>{" "}
-            <p className="text-lg font-semibold">
+          <div className="text-left sm:text-right">
+            <p className="text-sm text-theme-text-secondary">{questData.date}</p>
+            <p className="text-lg font-semibold text-theme-text">
               {questData.totalQuests} Quest
               {questData.totalQuests !== 1 ? "s" : ""}
             </p>
@@ -211,28 +209,27 @@ export default function TodaysQuests({ userId }) {
         </div>
 
         {/* Progress Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {questData.questsByGoal.map((goalGroup, index) => (
             <div
               key={goalGroup.goal?._id || `no-goal-${index}`}
-              className="p-4 rounded-lg"
-              style={{ backgroundColor: "var(--color-background-elevated)" }}
+              className="p-4 rounded-lg bg-theme-secondary"
             >
-              <h4 className="font-semibold mb-2 truncate">
+              <h4 className="font-semibold text-theme-text mb-2 truncate">
                 {goalGroup.goal?.title || "General Quests"}
               </h4>
-              <p className="text-sm text-muted mb-2">
+              <p className="text-sm text-theme-text-secondary mb-2 capitalize">
                 {goalGroup.goal?.category || "general"}
               </p>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold">
+                <span className="text-lg font-bold text-theme-primary">
                   {
                     goalGroup.quests.filter((q) => q.status === "completed")
                       .length
                   }
                 </span>
-                <span className="text-muted">/ {goalGroup.quests.length}</span>
-                <span className="text-sm text-muted">quests</span>
+                <span className="text-theme-text-secondary">/ {goalGroup.quests.length}</span>
+                <span className="text-sm text-theme-text-secondary">quests</span>
               </div>
             </div>
           ))}
@@ -246,13 +243,13 @@ export default function TodaysQuests({ userId }) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: groupIndex * 0.1 }}
-          className="card"
+          className="card-theme p-6"
         >
           {goalGroup.goal && (
-            <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-xl font-bold mb-2">{goalGroup.goal.title}</h3>
-              <p className="text-muted text-sm">{goalGroup.goal.description}</p>
-              <div className="flex items-center gap-4 mt-2 text-sm text-muted">
+            <div className="mb-6 pb-4 border-b border-theme-border/20">
+              <h3 className="text-xl font-bold text-theme-text mb-2">{goalGroup.goal.title}</h3>
+              <p className="text-theme-text-secondary text-sm mb-3 max-w-prose">{goalGroup.goal.description}</p>
+              <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-sm text-theme-text-secondary">
                 <span>
                   📅 Due:{" "}
                   {new Date(goalGroup.goal.deadline).toLocaleDateString()}
@@ -265,28 +262,28 @@ export default function TodaysQuests({ userId }) {
             </div>
           )}
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {goalGroup.quests.map((quest, questIndex) => (
               <motion.div
                 key={quest._id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: groupIndex * 0.1 + questIndex * 0.05 }}
-                className={`p-4 rounded-lg border-2 transition-all duration-200 ${
+                transition={{ delay: questIndex * 0.05 }}
+                className={`p-4 rounded-lg border-l-4 transition-all duration-200 ${
                   quest.status === "active"
-                    ? "border-primary bg-primary/5"
+                    ? "border-theme-primary bg-theme-primary/10"
                     : quest.status === "completed"
-                      ? "border-green-500 bg-green-500/5"
-                      : "border-gray-200 dark:border-gray-700 hover:border-primary/50"
+                      ? "border-theme-success bg-theme-success/10"
+                      : "border-theme-border/20 bg-theme-secondary hover:border-theme-primary/50"
                 }`}
               >
-                <div className="flex items-start justify-between">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="flex items-center flex-wrap gap-2 mb-2">
                       <span className="text-lg">{getStatusIcon(quest)}</span>
-                      <h4 className="font-semibold text-lg">{quest.title}</h4>
+                      <h4 className="font-semibold text-lg text-theme-text">{quest.title}</h4>
                       <span
-                        className="px-2 py-1 rounded text-xs font-medium text-white"
+                        className="px-2 py-0.5 rounded-full text-xs font-medium text-white"
                         style={{
                           backgroundColor: getDifficultyColor(quest.difficulty),
                         }}
@@ -295,20 +292,20 @@ export default function TodaysQuests({ userId }) {
                       </span>
                     </div>
 
-                    <p className="text-muted mb-3">{quest.description}</p>
+                    <p className="text-theme-text-secondary mb-3">{quest.description}</p>
 
-                    <div className="flex items-center gap-4 text-sm text-muted">
+                    <div className="flex items-center flex-wrap gap-x-4 gap-y-2 text-sm text-theme-text-secondary">
                       <span>⏱️ {quest.duration} min</span>
                       <span>🎁 {quest.xpReward} XP</span>
                       {quest.dayNumber && <span>📅 Day {quest.dayNumber}</span>}
                       {quest.isOptional && (
-                        <span className="text-blue-500">🌟 Optional</span>
+                        <span className="text-theme-accent font-medium">🌟 Optional</span>
                       )}
                     </div>
 
                     {quest.status === "active" && quest.deadline && (
                       <div className="mt-2 text-sm">
-                        <span className="text-orange-500">
+                        <span className="text-theme-warning">
                           ⏰ Ends:{" "}
                           {new Date(quest.deadline).toLocaleTimeString()}
                         </span>
@@ -316,11 +313,11 @@ export default function TodaysQuests({ userId }) {
                     )}
                   </div>
 
-                  <div className="flex flex-col gap-2 ml-4">
+                  <div className="flex-shrink-0 flex flex-col items-stretch gap-2 w-full sm:w-auto">
                     {quest.status === "available" && (
                       <button
                         onClick={() => startQuest(quest._id)}
-                        className="btn btn-primary"
+                        className="btn-primary w-full px-4 py-2 rounded-md"
                         disabled={activeQuest && activeQuest._id !== quest._id}
                       >
                         Start Quest
@@ -330,15 +327,15 @@ export default function TodaysQuests({ userId }) {
                     {quest.status === "active" && (
                       <button
                         onClick={() => completeQuest(quest._id)}
-                        className="btn btn-success"
+                        className="bg-theme-success text-white px-4 py-2 rounded-md w-full"
                       >
                         Complete
                       </button>
                     )}
 
                     {quest.status === "completed" && (
-                      <div className="text-center">
-                        <span className="text-green-500 font-medium">
+                      <div className="text-center p-2 rounded-md bg-theme-success/10">
+                        <span className="font-medium text-theme-success">
                           ✅ Completed
                         </span>
                       </div>
@@ -352,8 +349,8 @@ export default function TodaysQuests({ userId }) {
       ))}
 
       {/* Refresh Button */}
-      <div className="text-center">
-        <button onClick={fetchTodaysQuests} className="btn btn-secondary">
+      <div className="text-center mt-8">
+        <button onClick={fetchTodaysQuests} className="btn-outline-primary px-4 py-2 rounded-md">
           🔄 Refresh Quests
         </button>
       </div>

@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import XPBar, {
+import {
+  XPBar,
   StatsCard,
   LevelBadge,
   AchievementCard,
 } from "../../../components/XPComponents";
 import QuestCard from "../../../components/QuestCard";
 import TodaysQuests from "../../../components/TodaysQuests";
+
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [xpData, setXpData] = useState(null);
@@ -145,56 +147,45 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p>Loading your quest dashboard...</p>
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-text-secondary">Loading your quest dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ backgroundColor: "var(--color-bg)" }}
-    >
+    <div className="min-h-screen bg-background text-text-primary">
       {/* Header */}
-      <header
-        className="bg-white shadow-sm border-b"
-        style={{ borderColor: "var(--color-border)" }}
-      >
+      <header className="bg-surface shadow-sm border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
-              <h1 className="text-2xl font-bold text-gradient">
-                QuestForge ⚔️
-              </h1>
+              <h1 className="text-2xl font-bold text-primary">QuestForge ⚔️</h1>
               {xpData?.badge && (
                 <LevelBadge level={xpData.user.level} badge={xpData.badge} />
               )}
             </div>
 
-            <div className="flex items-center gap-4">
-              <span
-                className="text-sm"
-                style={{ color: "var(--color-text-secondary)" }}
-              >
+            <div className="flex items-center gap-2 md:gap-4">
+              <span className="hidden md:block text-sm text-text-secondary">
                 Welcome back, <strong>{user?.username}</strong>!
               </span>
               <button
                 onClick={() => router.push("/goals")}
-                className="btn btn-primary"
+                className="btn btn-primary btn-sm px-4 py-2 rounded-md "
               >
                 📋 Goals
               </button>
               <button
                 onClick={() => router.push("/profile")}
-                className="btn btn-secondary"
+                className="btn btn-secondary btn-sm px-4 py-2 rounded-md "
               >
                 👤 Profile
               </button>
-              <button onClick={logout} className="btn btn-secondary">
+              <button onClick={logout} className="btn btn-secondary btn-sm px-4 py-2 rounded-md ">
                 🚪 Logout
               </button>
             </div>
@@ -202,36 +193,35 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* XP Progress */}
         {xpData?.levelInfo && (
-          <XPBar
-            currentXP={xpData.levelInfo.totalXP}
-            level={xpData.levelInfo.currentLevel}
-            levelProgress={xpData.levelInfo.progress}
-            xpToNext={xpData.levelInfo.xpToNext}
-          />
+          <div className="mb-8">
+            <XPBar
+              currentXP={xpData.levelInfo.totalXP}
+              level={xpData.levelInfo.currentLevel}
+              levelProgress={xpData.levelInfo.progress}
+              xpToNext={xpData.levelInfo.xpToNext}
+            />
+          </div>
         )}
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
           <StatsCard
             title="Active Quests"
             value={xpData?.stats?.activeQuests || 0}
             icon="⚔️"
-            color="var(--color-quest-active)"
           />
           <StatsCard
             title="Completed"
             value={xpData?.stats?.completedQuests || 0}
             icon="✅"
-            color="var(--color-success)"
           />
           <StatsCard
             title="Daily Limit"
             value={`${dailyLimit?.questsStarted || 0}/${dailyLimit?.maxQuestsPerDay || 10}`}
             subtitle={`${dailyLimit?.remainingQuests || 0} remaining`}
             icon="📊"
-            color="var(--color-warning)"
           />
           <StatsCard
             title="Today's XP"
@@ -240,11 +230,10 @@ export default function Dashboard() {
               dailyLimit?.xpLost ? `-${dailyLimit.xpLost} lost` : "No XP lost"
             }
             icon="⭐"
-            color="var(--color-success)"
           />
-        </div>{" "}
+        </div>
         {/* Quest Actions */}
-        <div className="flex flex-wrap gap-4 mb-6">
+        <div className="flex flex-wrap gap-4 mb-8">
           <button
             onClick={() => router.push("/goals")}
             className="btn btn-primary"
@@ -255,45 +244,33 @@ export default function Dashboard() {
             onClick={() => router.push("/quests")}
             className="btn btn-secondary"
           >
-            🗂️ Manage Quests
+            🗂️ Manage All Quests
           </button>
         </div>
         {/* Tab Navigation */}
-        <div
-          className="flex flex-wrap gap-2 mb-6 border-b"
-          style={{ borderColor: "var(--color-border)" }}
-        >
-          <button
-            onClick={() => setActiveTab("today")}
-            className={`px-4 py-2 font-medium transition-colors ${
-              activeTab === "today"
-                ? "border-b-2 border-primary text-primary"
-                : "text-muted hover:text-primary"
-            }`}
-          >
-            📅 Today&apos;s Quests
-          </button>
-          <button
-            onClick={() => setActiveTab("all-quests")}
-            className={`px-4 py-2 font-medium transition-colors ${
-              activeTab === "all-quests"
-                ? "border-b-2 border-primary text-primary"
-                : "text-muted hover:text-primary"
-            }`}
-          >
-            🗂️ All Quests
-          </button>
-          <button
-            onClick={() => setActiveTab("goals")}
-            className={`px-4 py-2 font-medium transition-colors ${
-              activeTab === "goals"
-                ? "border-b-2 border-primary text-primary"
-                : "text-muted hover:text-primary"
-            }`}
-          >
-            🎯 Goals & Plans
-          </button>
+        <div className="border-b border-border mb-6">
+          <div className="flex flex-wrap gap-2 -mb-px">
+            <button
+              onClick={() => setActiveTab("today")}
+              className={`tab-button ${activeTab === "today" ? "tab-button-active" : ""}`}
+            >
+              📅 Today&apos;s Quests
+            </button>
+            <button
+              onClick={() => setActiveTab("all-quests")}
+              className={`tab-button ${activeTab === "all-quests" ? "tab-button-active" : ""}`}
+            >
+              🗂️ All Quests
+            </button>
+            <button
+              onClick={() => setActiveTab("goals")}
+              className={`tab-button ${activeTab === "goals" ? "tab-button-active" : ""}`}
+            >
+              🎯 Goals & Plans
+            </button>
+          </div>
         </div>
+
         {/* Tab Content */}
         <AnimatePresence mode="wait">
           {activeTab === "today" && (
@@ -329,14 +306,14 @@ export default function Dashboard() {
                   <button
                     key={filterType}
                     onClick={() => setFilter(filterType)}
-                    className={`btn ${filter === filterType ? "btn-primary" : "btn-secondary"}`}
+                    className={`btn btn-sm ${filter === filterType ? "btn-primary" : "btn-secondary"}`}
                   >
                     {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
                   </button>
                 ))}
               </div>
 
-              {/* Quest Grid - Legacy Quest System */}
+              {/* Quest Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <AnimatePresence>
                   {filteredQuests.map((quest, index) => (
@@ -354,6 +331,7 @@ export default function Dashboard() {
                         onFail={failQuest}
                         onAccept={acceptQuest}
                         onReject={rejectQuest}
+                        onRetry={retryQuest} // Added retry handler
                         canStart={dailyLimit?.canStartMore}
                       />
                     </motion.div>
@@ -362,8 +340,8 @@ export default function Dashboard() {
               </div>
 
               {filteredQuests.length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-muted text-lg mb-4">
+                <div className="text-center py-12 card bg-surface">
+                  <p className="text-text-secondary text-lg mb-4">
                     No quests found for the selected filter.
                   </p>
                   <button
@@ -386,9 +364,11 @@ export default function Dashboard() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="text-center py-12">
-                <h3 className="text-xl font-bold mb-4">Goals & Quest Plans</h3>
-                <p className="text-muted mb-6">
+              <div className="text-center py-12 card bg-surface">
+                <h3 className="text-xl font-bold mb-4 text-text-primary">
+                  Goals & Quest Plans
+                </h3>
+                <p className="text-text-secondary mb-6">
                   View and manage your goals and their associated quest plans.
                 </p>
                 <button
@@ -396,18 +376,16 @@ export default function Dashboard() {
                   className="btn btn-primary"
                 >
                   🎯 Go to Goals Page
-                </button>{" "}
+                </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
-        {/* Achievements Section */}
+
+        {/* Achievements */}
         {xpData?.achievements && xpData.achievements.length > 0 && (
           <div className="mt-12">
-            <h2
-              className="text-xl font-semibold mb-4"
-              style={{ color: "var(--color-text-primary)" }}
-            >
+            <h2 className="text-xl font-semibold mb-4 text-text-primary">
               Recent Achievements 🏆
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -417,7 +395,7 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
