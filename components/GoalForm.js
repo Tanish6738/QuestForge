@@ -10,9 +10,17 @@ export default function GoalForm({ onSubmit, onCancel, initialData = null }) {
     category: initialData?.category || 'personal',
     deadline: initialData?.deadline ? new Date(initialData.deadline).toISOString().split('T')[0] : '',
     priority: initialData?.priority || 'medium',
-    tags: initialData?.tags?.join(', ') || ''
+    tags: initialData?.tags?.join(', ') || '',
+    dailyTimeAvailable: initialData?.dailyTimeAvailable || 60,
+    preferredTimeSlots: initialData?.preferredTimeSlots || [],
+    questGenerationPreferences: {
+      difficulty: initialData?.questGenerationPreferences?.difficulty || 'mixed',
+      sessionLength: initialData?.questGenerationPreferences?.sessionLength || 'flexible',
+      breakdownStyle: initialData?.questGenerationPreferences?.breakdownStyle || 'moderate'
+    }
   });
 
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [errors, setErrors] = useState({});
 
   const categories = [
@@ -25,7 +33,6 @@ export default function GoalForm({ onSubmit, onCancel, initialData = null }) {
     { value: 'hobbies', label: '🎨 Hobbies & Recreation' },
     { value: 'other', label: '📋 Other' }
   ];
-
   const priorities = [
     { value: 'low', label: 'Low', color: 'var(--color-text-muted)' },
     { value: 'medium', label: 'Medium', color: 'var(--color-warning)' },
@@ -33,9 +40,40 @@ export default function GoalForm({ onSubmit, onCancel, initialData = null }) {
     { value: 'urgent', label: 'Urgent', color: 'var(--color-quest-side)' }
   ];
 
+  const difficultyOptions = [
+    { value: 'easy', label: 'Easy - Gentle progression' },
+    { value: 'medium', label: 'Medium - Balanced challenge' },
+    { value: 'hard', label: 'Hard - Intensive approach' },
+    { value: 'mixed', label: 'Mixed - Varied difficulty levels' }
+  ];
+
+  const sessionLengthOptions = [
+    { value: 'short', label: 'Short (15-30 min)' },
+    { value: 'medium', label: 'Medium (30-60 min)' },
+    { value: 'long', label: 'Long (60-120 min)' },
+    { value: 'flexible', label: 'Flexible - Mix of lengths' }
+  ];
+
+  const breakdownStyleOptions = [
+    { value: 'detailed', label: 'Detailed - Many small steps' },
+    { value: 'moderate', label: 'Moderate - Balanced breakdown' },
+    { value: 'minimal', label: 'Minimal - Fewer, bigger tasks' }
+  ];
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    if (name.startsWith('questGenerationPreferences.')) {
+      const prefKey = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        questGenerationPreferences: {
+          ...prev.questGenerationPreferences,
+          [prefKey]: value
+        }
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
     
     // Clear error when user starts typing
     if (errors[name]) {
@@ -56,9 +94,7 @@ export default function GoalForm({ onSubmit, onCancel, initialData = null }) {
       newErrors.description = 'Description is required';
     } else if (formData.description.length > 1000) {
       newErrors.description = 'Description must be less than 1000 characters';
-    }
-
-    if (!formData.deadline) {
+    }    if (!formData.deadline) {
       newErrors.deadline = 'Deadline is required';
     } else {
       const deadlineDate = new Date(formData.deadline);
@@ -70,6 +106,10 @@ export default function GoalForm({ onSubmit, onCancel, initialData = null }) {
       }
     }
 
+    if (!formData.dailyTimeAvailable || formData.dailyTimeAvailable < 15 || formData.dailyTimeAvailable > 720) {
+      newErrors.dailyTimeAvailable = 'Daily time must be between 15 and 720 minutes';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -79,11 +119,11 @@ export default function GoalForm({ onSubmit, onCancel, initialData = null }) {
     
     if (!validateForm()) {
       return;
-    }
-
-    const goalData = {
+    }    const goalData = {
       ...formData,
-      tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+      tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+      dailyTimeAvailable: parseInt(formData.dailyTimeAvailable),
+      questGenerationPreferences: formData.questGenerationPreferences
     };
 
     onSubmit(goalData);
@@ -198,9 +238,7 @@ export default function GoalForm({ onSubmit, onCancel, initialData = null }) {
               {errors.deadline}
             </p>
           )}
-        </div>
-
-        <div>
+        </div>        <div>
           <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
             Tags (optional)
           </label>
@@ -209,12 +247,113 @@ export default function GoalForm({ onSubmit, onCancel, initialData = null }) {
             name="tags"
             value={formData.tags}
             onChange={handleChange}
+            placeholder="e.g., fitness, personal-growth, urgent"
             className="input"
-            placeholder="health, fitness, daily routine (comma separated)"
           />
           <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
             Separate tags with commas
           </p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
+            Daily Time Available (minutes) *
+          </label>
+          <input
+            type="number"
+            name="dailyTimeAvailable"
+            value={formData.dailyTimeAvailable}
+            onChange={handleChange}
+            min="15"
+            max="720"
+            className={`input ${errors.dailyTimeAvailable ? 'border-red-500' : ''}`}
+            placeholder="60"
+          />
+          {errors.dailyTimeAvailable && (
+            <p className="text-sm mt-1" style={{ color: 'var(--color-danger)' }}>
+              {errors.dailyTimeAvailable}
+            </p>
+          )}
+          <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>
+            How many minutes per day can you dedicate to this goal? (15-720 minutes)
+          </p>
+        </div>
+
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="text-sm font-medium mb-3 flex items-center gap-2"
+            style={{ color: 'var(--color-primary)' }}
+          >
+            <span>{showAdvanced ? '▼' : '▶'}</span>
+            Advanced Quest Preferences
+          </button>
+
+          {showAdvanced && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="space-y-4 p-4 rounded-lg"
+              style={{ backgroundColor: 'var(--color-background-elevated)' }}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                    Difficulty Preference
+                  </label>
+                  <select
+                    name="questGenerationPreferences.difficulty"
+                    value={formData.questGenerationPreferences.difficulty}
+                    onChange={handleChange}
+                    className="select"
+                  >
+                    {difficultyOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                    Session Length
+                  </label>
+                  <select
+                    name="questGenerationPreferences.sessionLength"
+                    value={formData.questGenerationPreferences.sessionLength}
+                    onChange={handleChange}
+                    className="select"
+                  >
+                    {sessionLengthOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-primary)' }}>
+                    Task Breakdown
+                  </label>
+                  <select
+                    name="questGenerationPreferences.breakdownStyle"
+                    value={formData.questGenerationPreferences.breakdownStyle}
+                    onChange={handleChange}
+                    className="select"
+                  >
+                    {breakdownStyleOptions.map(option => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>              </div>
+            </motion.div>
+          )}
         </div>
 
         <div className="flex gap-4 pt-4">

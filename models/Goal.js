@@ -31,11 +31,38 @@ const GoalSchema = new mongoose.Schema({
     type: String,
     enum: ['active', 'completed', 'paused', 'cancelled'],
     default: 'active'
-  },
-  priority: {
+  },  priority: {
     type: String,
     enum: ['low', 'medium', 'high', 'urgent'],
     default: 'medium'
+  },
+  dailyTimeAvailable: {
+    type: Number, // minutes per day user can dedicate to this goal
+    required: true,
+    min: 15,
+    max: 720 // max 12 hours per day
+  },
+  preferredTimeSlots: [{
+    start: String, // e.g., "09:00"
+    end: String,   // e.g., "10:30"
+    days: [String] // e.g., ["monday", "wednesday", "friday"]
+  }],
+  questGenerationPreferences: {
+    difficulty: {
+      type: String,
+      enum: ['easy', 'medium', 'hard', 'mixed'],
+      default: 'mixed'
+    },
+    sessionLength: {
+      type: String,
+      enum: ['short', 'medium', 'long', 'flexible'], // short: 15-30min, medium: 30-60min, long: 60-120min
+      default: 'flexible'
+    },
+    breakdownStyle: {
+      type: String,
+      enum: ['detailed', 'moderate', 'minimal'],
+      default: 'moderate'
+    }
   },
   tags: [{
     type: String,

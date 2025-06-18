@@ -60,10 +60,27 @@ const QuestSchema = new mongoose.Schema({
   },
   completedAt: {
     type: Date
-  },
-  deadline: {
+  },  deadline: {
     type: Date
   },
+  scheduledDate: {
+    type: Date // The specific date this quest is scheduled for
+  },
+  scheduledTime: {
+    start: String, // e.g., "09:00"
+    end: String    // e.g., "10:30"
+  },
+  questPlanId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'QuestPlan'
+  },
+  dayNumber: {
+    type: Number // Which day of the plan this belongs to
+  },
+  prerequisites: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Quest'
+  }],
   failedAt: {
     type: Date
   },

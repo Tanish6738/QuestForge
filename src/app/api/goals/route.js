@@ -29,7 +29,21 @@ async function createGoal(request) {
     await connectDB();
     const userId = request.user._id;
     
-    const { title, description, category, deadline, priority = 'medium', tags = [] } = await request.json();
+    const { 
+      title, 
+      description, 
+      category, 
+      deadline, 
+      priority = 'medium', 
+      tags = [],
+      dailyTimeAvailable = 60,
+      preferredTimeSlots = [],
+      questGenerationPreferences = {
+        difficulty: 'mixed',
+        sessionLength: 'flexible',
+        breakdownStyle: 'moderate'
+      }
+    } = await request.json();
     
     // Validation
     if (!title || !description || !category || !deadline) {
@@ -48,6 +62,14 @@ async function createGoal(request) {
       );
     }
     
+    // Validate daily time available
+    if (dailyTimeAvailable < 15 || dailyTimeAvailable > 720) {
+      return NextResponse.json(
+        { error: 'Daily time available must be between 15 and 720 minutes' },
+        { status: 400 }
+      );
+    }
+    
     // Create goal
     const goal = new Goal({
       userId,
@@ -56,48 +78,24 @@ async function createGoal(request) {
       category,
       deadline: deadlineDate,
       priority,
-      tags
+      tags,
+      dailyTimeAvailable,
+      preferredTimeSlots,
+      questGenerationPreferences
     });
-      await goal.save();
     
-    // Generate main quests for this goal
-    const mainQuestTemplates = await generateMainQuests(goal);
-    const mainQuests = [];
-    
-    for (const questTemplate of mainQuestTemplates) {
-      const quest = new Quest({
-        userId,
-        goalId: goal._id,
-        ...questTemplate
-      });
-        await quest.save();
-      mainQuests.push(quest);
-      
-      // Generate sub-quests for each main quest
-      const subQuestTemplates = await generateSubQuests(quest, goal);
-      const subQuests = [];
-      
-      for (const subQuestTemplate of subQuestTemplates) {
-        const subQuest = new Quest({
-          userId,
-          goalId: goal._id,
-          ...subQuestTemplate,
-          parentQuestId: quest._id
-        });
-        
-        await subQuest.save();
-        subQuests.push(subQuest);
-      }
-    }
-    
-    // Fetch the complete goal with quests
-    const completeGoal = await Goal.findById(goal._id);
-    const goalQuests = await Quest.find({ goalId: goal._id });
+    await goal.save();    
+    // Note: We no longer auto-generate quests here - they will be generated 
+    // through the quest plan API when the user is ready
     
     return NextResponse.json({
-      message: 'Goal created successfully',
-      goal: completeGoal,
-      quests: goalQuests
+      message: 'Goal created successfully. Use the quest plan API to generate daily quests.',
+      goal: goal,
+      nextSteps: {
+        message: 'To generate your personalized quest plan, call:',
+        endpoint: `POST /api/goals/${goal._id}/plan`,
+        payload: { userId: userId }
+      }
     }, { status: 201 });
     
   } catch (error) {

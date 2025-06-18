@@ -11,7 +11,7 @@ async function getQuest(request, { params }) {
   try {
     await connectDB();
     const userId = request.user._id;
-    const questId = params.id;
+    const { id: questId } = await params;
     
     const quest = await Quest.findOne({ _id: questId, userId })
       .populate('goalId', 'title category')
@@ -49,7 +49,7 @@ async function updateQuest(request, { params }) {
   try {
     await connectDB();
     const userId = request.user._id;
-    const questId = params.id;
+    const { id: questId } = await params;
     
     const { action, ...updateData } = await request.json();
     
@@ -235,7 +235,7 @@ async function deleteQuest(request, { params }) {
   try {
     await connectDB();
     const userId = request.user._id;
-    const questId = params.id;
+    const { id: questId } = await params;
     
     const quest = await Quest.findOne({ _id: questId, userId });
     

@@ -54,14 +54,18 @@ export default function GoalsPage() {
         body: JSON.stringify(goalData)
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
+      const data = await response.json();      if (!response.ok) {
         alert(data.error || 'Failed to create goal');
         return;
       }
 
-      alert(`🎉 Goal created successfully! ${data.quests?.length || 0} quests generated!`);
+      // Show success message with next steps
+      alert(`🎉 Goal created successfully! 
+
+Next steps:
+1. Click on your goal to view details
+2. Generate a quest plan to create daily tasks
+3. Complete quests and earn XP!`);
       setShowForm(false);
       fetchGoals();
 
