@@ -246,6 +246,12 @@ export default function Dashboard() {
           >
             🗂️ Manage All Quests
           </button>
+          <button
+            onClick={() => router.push("/arena")}
+            className="btn btn-accent"
+          >
+            ⚔️ Battle Arena
+          </button>
         </div>
         {/* Tab Navigation */}
         <div className="border-b border-border mb-6">
