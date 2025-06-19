@@ -55,7 +55,7 @@ export default function WebSocketArenaComponent({
       
       // In production, replace with your Render WebSocket URL
       const wsUrl = process.env.NODE_ENV === 'production' 
-        ? 'wss://your-battle-service.onrender.com'
+        ? process.env.NEXT_PUBLIC_BATTLE_WS_URL || 'wss://your-battle-service.onrender.com'
         : 'ws://localhost:8080';
       
       const ws = new WebSocket(wsUrl);
