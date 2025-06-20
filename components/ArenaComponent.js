@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DIFFICULTY_LEVELS, getSkillsByIds } from "../lib/skills";
 
@@ -315,15 +315,15 @@ function BattleInterface({ battleState, onBattleComplete, userSkills }) {
   const player = battleState.players[0];
   const opponent = battleState.players[1];
 
-  const useSkill = async (skill) => {
+      const handleUseSkill = useCallback(async (skill) => {
     if (skillCooldowns[skill.id] > 0) return;
 
     // Simulate battle action
     const damage = Math.floor(skill.power + Math.random() * 10);
     const newLog = `${player.username} used ${skill.name} for ${damage} damage!`;
-    
+
     setActionLog(prev => [...prev, newLog]);
-    
+
     // Set cooldown
     setSkillCooldowns(prev => ({
       ...prev,
@@ -336,7 +336,7 @@ function BattleInterface({ battleState, onBattleComplete, userSkills }) {
       const aiDamage = Math.floor(aiSkill.power * 0.8);
       setActionLog(prev => [...prev, `${opponent.username} used ${aiSkill.name} for ${aiDamage} damage!`]);
     }, 1500);
-  };
+      }, [skillCooldowns, player.username, opponent.username, userSkills]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -407,7 +407,7 @@ function BattleInterface({ battleState, onBattleComplete, userSkills }) {
                 key={skill.id}
                 whileHover={{ scale: isOnCooldown ? 1 : 1.05 }}
                 whileTap={{ scale: isOnCooldown ? 1 : 0.95 }}
-                onClick={() => !isOnCooldown && useSkill(skill)}
+                onClick={() => !isOnCooldown && handleUseSkill(skill)}
                 disabled={isOnCooldown}
                 className={`p-4 rounded-lg border-2 transition-all ${
                   isOnCooldown

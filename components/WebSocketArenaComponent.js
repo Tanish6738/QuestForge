@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef,useCallback } from "react";
 import { getSkillsByIds } from "../lib/skills";
 
 export default function WebSocketArenaComponent({ 
@@ -10,7 +10,8 @@ export default function WebSocketArenaComponent({
   user 
 }) {
   const [socket, setSocket] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState("disconnected");  const [battleState, setBattleState] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState("disconnected");  
+  const [battleState, setBattleState] = useState(null);
   const [actionLog, setActionLog] = useState([]);
   const [skillCooldowns, setSkillCooldowns] = useState({});
   const [showDifficultyModal, setShowDifficultyModal] = useState(false);
@@ -22,89 +23,8 @@ export default function WebSocketArenaComponent({
 
   const skills = getSkillsByIds(selectedSkills);
 
-  useEffect(() => {
-    connectToWebSocket();
-    
-    return () => {
-      if (socket) {
-        socket.close();
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    // Update skill cooldowns every second
-    const interval = setInterval(() => {
-      setSkillCooldowns(prev => {
-        const updated = { ...prev };
-        Object.keys(updated).forEach(skillId => {
-          if (updated[skillId] > 0) {
-            updated[skillId]--;
-          }
-        });
-        return updated;
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const connectToWebSocket = () => {
-    try {
-      setConnectionStatus("connecting");
-      
-      // In production, replace with your Render WebSocket URL
-      const wsUrl = process.env.NODE_ENV === 'production' 
-        ? process.env.NEXT_PUBLIC_BATTLE_WS_URL || 'wss://your-battle-service.onrender.com'
-        : 'ws://localhost:8080';
-      
-      const ws = new WebSocket(wsUrl);
-
-      ws.onopen = () => {
-        console.log('Connected to Battle Service');
-        setConnectionStatus("connected");
-        setSocket(ws);
-        reconnectAttempts.current = 0;
-        
-        // Send ping to verify connection
-        ws.send(JSON.stringify({ type: 'ping' }));
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          handleWebSocketMessage(data);
-        } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
-        }
-      };
-
-      ws.onclose = () => {
-        console.log('Disconnected from Battle Service');
-        setConnectionStatus("disconnected");
-        setSocket(null);
-        
-        // Attempt to reconnect
-        if (reconnectAttempts.current < maxReconnectAttempts) {
-          reconnectAttempts.current++;
-          setTimeout(() => {
-            console.log(`Reconnection attempt ${reconnectAttempts.current}`);
-            connectToWebSocket();
-          }, 2000 * reconnectAttempts.current);
-        }
-      };
-
-      ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setConnectionStatus("error");
-      };
-
-    } catch (error) {
-      console.error('Failed to connect to WebSocket:', error);
-      setConnectionStatus("error");
-    }
-  };
-  const handleWebSocketMessage = (data) => {
+  // Define handleWebSocketMessage first to avoid the circular dependency
+  const handleWebSocketMessage = useCallback((data) => {
     const { type, payload, message } = data;
 
     switch (type) {
@@ -122,7 +42,7 @@ export default function WebSocketArenaComponent({
       case 'battle_update':
         if (payload && payload.battle) {
           setBattleState(payload.battle);
-          
+
           // Add action to log
           const latestRound = payload.battle.rounds[payload.battle.rounds.length - 1];
           if (latestRound) {
@@ -135,7 +55,7 @@ export default function WebSocketArenaComponent({
           if (payload.battle.status === 'finished') {
             const isWinner = payload.battle.winner === user.id;
             const xpGained = isWinner ? 50 : 20; // Basic XP calculation
-            
+
             setTimeout(() => {
               onBattleComplete({
                 winner: isWinner ? user.username : 'Opponent',
@@ -151,7 +71,8 @@ export default function WebSocketArenaComponent({
         if (payload) {
           console.log('Matchmaking status:', payload.status);
         }
-        break;      case 'error':
+        break;      
+      case 'error':
         const errorMessage = (payload && payload.message) || message || 'Unknown error';
         console.error('Battle service error:', errorMessage);
         setActionLog(prev => [...prev, `Error: ${errorMessage}`]);
@@ -171,7 +92,102 @@ export default function WebSocketArenaComponent({
       default:
         console.log('Unknown message type:', type);
     }
-  };
+  }, [user.id, user.username, onBattleComplete]);
+
+  // Define connectToWebSocket with useCallback to avoid recreation on each render
+  const connectToWebSocket = useCallback(() => {
+    // Prevent reconnecting if already connecting or connected
+    if (connectionStatus === "connecting" || connectionStatus === "connected") {
+      return;
+    }
+
+    try {
+      setConnectionStatus("connecting");
+
+      // In production, replace with your Render WebSocket URL
+      const wsUrl = process.env.NODE_ENV === 'production' 
+        ? process.env.NEXT_PUBLIC_BATTLE_WS_URL || 'https://questforge-battlesevice-v0.onrender.com'
+        : 'ws://localhost:8080';
+
+      const ws = new WebSocket(wsUrl);
+
+      ws.onopen = () => {
+        console.log('Connected to Battle Service');
+        setConnectionStatus("connected");
+        setSocket(ws);
+        reconnectAttempts.current = 0;
+
+        // Send ping to verify connection
+        ws.send(JSON.stringify({ type: 'ping' }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          handleWebSocketMessage(data);
+        } catch (error) {
+          console.error('Error parsing WebSocket message:', error);
+        }
+      };
+
+      ws.onclose = () => {
+        console.log('Disconnected from Battle Service');
+        setConnectionStatus("disconnected");
+        setSocket(null);
+
+        // Attempt to reconnect
+        if (reconnectAttempts.current < maxReconnectAttempts) {
+          reconnectAttempts.current++;
+          setTimeout(() => {
+            console.log(`Reconnection attempt ${reconnectAttempts.current}`);
+            connectToWebSocket();
+          }, 2000 * reconnectAttempts.current);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setConnectionStatus("error");
+      };
+
+    } catch (error) {
+      console.error('Failed to connect to WebSocket:', error);
+      setConnectionStatus("error");
+    }
+  }, [handleWebSocketMessage]);
+
+  useEffect(() => {
+    // Only connect if no connection exists
+    if (!socket && connectionStatus !== "connecting") {
+      connectToWebSocket();
+    }
+
+    // Cleanup function
+    return () => {
+      if (socket) {
+        // Prevent the onclose handler from triggering reconnect
+        reconnectAttempts.current = maxReconnectAttempts;
+        socket.close();
+      }
+    };
+  }, [connectToWebSocket]);
+
+  useEffect(() => {
+    // Update skill cooldowns every second
+    const interval = setInterval(() => {
+      setSkillCooldowns(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(skillId => {
+          if (updated[skillId] > 0) {
+            updated[skillId]--;
+          }
+        });
+        return updated;
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const joinArenaBattle = (mode, difficulty = null) => {
     if (!socket || connectionStatus !== "connected") {
@@ -194,9 +210,9 @@ export default function WebSocketArenaComponent({
     }));
   };
 
-  const useSkill = (skillId) => {
+  const handleUseSkill = useCallback((skillId) => {
     if (!socket || !battleState || connectionStatus !== "connected") return;
-    
+
     const skill = skills.find(s => s.id === skillId);
     if (!skill) return;
 
@@ -204,7 +220,7 @@ export default function WebSocketArenaComponent({
     if (skillCooldowns[skillId] > 0) return;
 
     const token = localStorage.getItem("token");
-    
+
     socket.send(JSON.stringify({
       type: 'battle_action',
       token,
@@ -221,7 +237,7 @@ export default function WebSocketArenaComponent({
       ...prev,
       [skillId]: skill.cooldown
     }));
-  };
+  }, [socket, battleState, connectionStatus, skills, skillCooldowns, user.id]);
   const forfeitBattle = () => {
     if (!socket || !battleState) return;
 
@@ -472,7 +488,7 @@ export default function WebSocketArenaComponent({
               return (
                 <button
                   key={skill.id}
-                  onClick={() => !isOnCooldown && useSkill(skill.id)}
+                  onClick={() => !isOnCooldown && handleUseSkill(skill.id)}
                   disabled={isOnCooldown || battleState.status !== 'in_progress'}
                   className={`p-4 rounded-lg border-2 transition-all ${
                     isOnCooldown || battleState.status !== 'in_progress'
